@@ -1,0 +1,12 @@
+--TOP10 na utilização de IO
+SELECT top 10 (total_logical_reads/execution_count),
+  (total_logical_writes/execution_count),
+  (total_physical_reads/execution_count),
+  Execution_count, sql_handle, plan_handle
+FROM sys.dm_exec_query_stats  
+ORDER BY (total_logical_reads + total_logical_writes) Desc
+
+
+--Visualizar o codigo
+SELECT text 
+FROM sys.dm_exec_sql_text (<sql_handle>)

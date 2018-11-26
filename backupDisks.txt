@@ -1,0 +1,119 @@
+Host Name	saoshappd0122.br.db.com
+/opt/NetprobeUN/toolkits/getFiles5min.sh /domains/interfaces/roteador/main/limitcheckin/ L*
+/opt/NetprobeUN/toolkits/getFiles5min.sh /interfaces/reportManager/upload/ *
+
+br-dba@list.db.com,anderson.vieira@db.com,jefferson.omena@db.com,glauber.coura@db.com,adriano.leal@db.com,eduardo.kanashiro@db.com,ernane.silva@db.com,roberto.ramalho@db.com,br-rtb@list.db.com
+
+SAOSHASP0236
+
+BACKUP DATABASE JDCCSJUDV01
+TO DISK = 'K:\Data\Backup\bkp_JDCCSJUDV01.bak'
+WITH INIT
+go
+BACKUP LOG JDCCSJUDV01
+TO DISK = 'K:\Data\Backup\bkp_JDCCSJUDV01.trn'
+WITH INIT
+go
+
+
+del T:\Data\backup\bkp_YMFSAC_Temp1.bak
+del L:\Data\backup\bkp_YMFSAC_Temp2.bak
+del L:\Data\backup\bkp_YMFSAC_Temp3.bak
+del J:\Data\backup\bkp_YMFSAC_Temp4.bak
+del I:\Data\Backup\bkp_YMFSAC_Temp5.bak
+del I:\Data\Backup\bkp_YMFSAC_Temp6.bak
+
+BACKUP DATABASE YMFSAC 
+TO bkp_YMFSAC_Temp1,bkp_YMFSAC_Temp2,bkp_YMFSAC_Temp3,bkp_YMFSAC_Temp4,bkp_YMFSAC_Temp5,bkp_YMFSAC_Temp6
+WITH INIT
+GO
+BACKUP LOG [YMFSAC]
+TO DISK = 'I:\Data\Backup\bkp_YMFSAC.trn'
+WITH INIT
+go
+BACKUP LOG [YMFSAC]
+TO DISK = 'E:\Data\Backup\bkp_YMFSAC2.trn'
+WITH INIT
+go
+
+RESTORE DATABASE YMFSAC FROM 
+DISK = '\\saocuappp60n2\T$\Data\backup\bkp_YMFSAC_Temp1.bak',
+DISK = '\\saocuappp60n2\L$\Data\backup\bkp_YMFSAC_Temp2.bak',
+DISK = '\\saocuappp60n2\L$\Data\backup\bkp_YMFSAC_Temp3.bak',
+DISK = '\\saocuappp60n2\J$\Data\backup\bkp_YMFSAC_Temp4.bak',
+DISK = '\\saocuappp60n2\I$\Data\Backup\bkp_YMFSAC_Temp5.bak',
+DISK = '\\saocuappp60n2\I$\Data\Backup\bkp_YMFSAC_Temp6.bak'
+WITH REPLACE, NORECOVERY
+go
+RESTORE LOG YMFSAC FROM DISK = '\\saocuappp60n2\I$\Data\Backup\bkp_YMFSAC.trn' WITH NORECOVERY
+go
+
+
+L:\Data\backup\bkp_YMFSAC_Temp2.bak
+
+
+
+
+BACKUP DATABASE [ATTSGR2] 
+TO  [bkp_ATTSGR2_TEMP1],  [bkp_ATTSGR2_TEMP2],  [bkp_ATTSGR2_TEMP3],  [bkp_ATTSGR2_TEMP4],  
+[bkp_ATTSGR2_TEMP5],  [bkp_ATTSGR2_TEMP6],  [bkp_ATTSGR2_TEMP7],  [bkp_ATTSGR2_TEMP8],  
+[bkp_ATTSGR2_TEMP9],  [bkp_ATTSGR2_TEMP10],  [bkp_ATTSGR2_TEMP11],  [bkp_ATTSGR2_TEMP12],  
+[bkp_ATTSGR2_TEMP13],  [bkp_ATTSGR2_TEMP14],  [bkp_ATTSGR2_TEMP15],  [bkp_ATTSGR2_TEMP16],  
+[bkp_ATTSGR2_TEMP17],  [bkp_ATTSGR2_TEMP18],  [bkp_ATTSGR2_TEMP19],  [bkp_ATTSGR2_TEMP20] 
+WITH INIT
+GO
+BACKUP LOG [ATTSGR2]
+TO DISK = 'W:\Backup\bkp_ATTSGR2.trn'
+WITH INIT
+go
+
+
+
+
+RESTORE DATABASE ATTSGR2 FROM 
+DISK = '\\saocuappp60n1\S$\Data\Backup\bkp_ATTSGR2_1.bak',
+DISK = '\\saocuappp60n1\P$\Data\Backup\bkp_ATTSGR2_2.bak',
+DISK = '\\saocuappp60n1\Z$\Data\Backup\bkp_ATTSGR2_3.bak',
+DISK = '\\saocuappp60n1\Z$\Data\Backup\bkp_ATTSGR2_4.bak',
+DISK = '\\saocuappp60n1\O$\Data\Backup\bkp_ATTSGR2_5.bak',
+DISK = '\\saocuappp60n1\O$\Data\Backup\bkp_ATTSGR2_6.bak',
+DISK = '\\saocuappp60n1\M$\Data\Backup\bkp_ATTSGR2_7.bak',
+DISK = '\\saocuappp60n1\M$\Data\Backup\bkp_ATTSGR2_8.bak',
+DISK = '\\saocuappp60n1\V$\Data\Backup\bkp_ATTSGR2_9.bak',
+DISK = '\\saocuappp60n1\N$\Data\Backup\bkp_ATTSGR2_10.bak',
+DISK = '\\saocuappp60n1\U$\Data\Backup\bkp_ATTSGR2_11.bak',
+DISK = '\\saocuappp60n1\X$\data\Backup\bkp_ATTSGR2_12.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_13.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_14.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_15.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_16.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_17.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_18.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_19.bak',
+DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2_20.bak'
+WITH REPLACE, NORECOVERY
+go
+RESTORE LOG ATTSGR2 FROM DISK = '\\saocuappp60n1\W$\Backup\bkp_ATTSGR2.trn' WITH NORECOVERY
+go
+
+del S:\Data\Backup\bkp_ATTSGR2_1.bak
+del P:\Data\Backup\bkp_ATTSGR2_2.bak
+del Z:\Data\Backup\bkp_ATTSGR2_3.bak
+del Z:\Data\Backup\bkp_ATTSGR2_4.bak
+del O:\Data\Backup\bkp_ATTSGR2_5.bak
+del O:\Data\Backup\bkp_ATTSGR2_6.bak
+del M:\Data\Backup\bkp_ATTSGR2_7.bak
+del M:\Data\Backup\bkp_ATTSGR2_8.bak
+del V:\Data\Backup\bkp_ATTSGR2_9.bak
+del N:\Data\Backup\bkp_ATTSGR2_10.bak
+del U:\Data\Backup\bkp_ATTSGR2_11.bak
+del X:\data\Backup\bkp_ATTSGR2_12.bak
+del W:\Backup\bkp_ATTSGR2_13.bak
+del W:\Backup\bkp_ATTSGR2_14.bak
+del W:\Backup\bkp_ATTSGR2_15.bak
+del W:\Backup\bkp_ATTSGR2_16.bak
+del W:\Backup\bkp_ATTSGR2_17.bak
+del W:\Backup\bkp_ATTSGR2_18.bak
+del W:\Backup\bkp_ATTSGR2_19.bak
+del W:\Backup\bkp_ATTSGR2_20.bak
+del W:\Backup\bkp_ATTSGR2.trn

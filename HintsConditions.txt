@@ -1,0 +1,75 @@
+
+
+
+
+--Determining the estimated cost of parallel execution plans.
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;
+WITH XMLNAMESPACES
+(DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
+SELECT  query_plan AS CompleteQueryPlan ,
+        n.value('(@StatementText)[1]', 'VARCHAR(4000)') AS StatementText ,
+        n.value('(@StatementOptmLevel)[1]', 'VARCHAR(25)') AS StatementOptimizationLevel ,
+        n.value('(@StatementSubTreeCost)[1]', 'VARCHAR(128)') AS StatementSubTreeCost ,
+        n.query('.') AS ParallelSubTreeXML ,
+        ecp.usecounts ,
+        ecp.size_in_bytes
+FROM    sys.dm_exec_cached_plans AS ecp
+        CROSS APPLY sys.dm_exec_query_plan(plan_handle) AS eqp
+        CROSS APPLY query_plan.nodes('/ShowPlanXML/BatchSequence/Batch/Statements/StmtSimple')
+        AS qn ( n )
+WHERE   n.query('.').exist('//RelOp[@PhysicalOp="Parallelism"]') = 1
+
+
+
+--Lots of recompilations for a single query
+--1 Option: parameterizer the query
+dtrOrdDemo.Close();
+cmd.CommandType = CommandType.Text;
+cmd.CommandText = @"select * from ordDemo
+where orderID=@IdOrder";
+cmd.Parameters.Add("@IdOrder",SqlDbType.Int,10);
+cmd.Parameters["@IdOrder"].Value = intIdOrder.Text;
+dtrOrdDemo = cmd.ExecuteReader();
+--2 Option: set the PARAMETERIZATION option to FORCED.
+ALTER DATABASE AdventureWorks SET PARAMETERIZATION FORCED
+--3 Option: enable the optimize for ad hoc workloads setting.
+EXEC sp_configure 'show advanced options', 1
+RECONFIGURE
+EXEC sp_configure 'optimize for ad hoc workloads', 1
+RECONFIGURE
+
+
+
+--Parameter sniffing
+--It is a process that SQLServer create a execution plan for a stored procedure.
+--Sometimes this execution plan is correct dimensioned for a determined amount of
+--rows, in this case, for other amount of rows there will be a poor performance.
+--1 option: OPTIMIZE FOR hint
+WHERE ShipDate BETWEEN @ShipDateStart AND @ShipDateEnd
+OPTION (OPTIMIZE FOR (@ShipDateStart = '2001/07/08', @ShipDateEnd = '2004/01/01'))
+--2 option: OPTION (RECOMPILE)
+WHERE ShipDate BETWEEN @ShipDateStart AND @ShipDateEnd
+OPTION (RECOMPILE)
+
+
+
+--Implicit/explicit conversions (N'', CAST, CONVERT)
+--the fix for implicit conversion is to ensure that columns used in joins are 
+--always of the same type and that, in the WHERE clause, any variables, parameters 
+--or constants are of the same type as the columns to which they are being compared
+WHERE AccountNumber = N'AL00012345'
+--not use
+WHERE CONVERT(VARCHAR(10), sod.ModifiedDate, 101) = '01/01/2010'
+--prefer to use
+WHERE sod.ModifiedDate >= '2010/01/01'
+AND sod.Modified < '2010/01/02'
+
+
+
+--Non-SARGable predicate in the WHERE or JOIN terms
+--(UPPER, LOWER, LTRIM, RTRIM, ISNULL)
+--not use
+WHERE ISNULL(SOmeCol,0) > 0
+--prefer to use
+WHERE SomeCol > 0
+

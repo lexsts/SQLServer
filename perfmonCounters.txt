@@ -1,0 +1,100 @@
+--Return all counters related to current instance
+SELECT * FROM SYS.DM_OS_PERFORMANCE_COUNTERS
+WHERE OBJECT_NAME LIKE '%' + @@SERVICENAME + '%'
+
+
+###Perfmon to monitor CPU utilization on server
+- Processor/ %Privileged Time		
+	Percentage of time the processor spends on execution of Microsoft 
+	Windows kernel commands such as core operating system activity 	
+	and device drivers.
+- Processor/ %User Time			
+	percentage of time the processor spends on executing user 
+	processes such as SQL Server. This includes I/O requests from SQL 
+	Server
+- Process (sqlservr.exe)/ %Processor Time	
+	the sum of processor time on each processor for all 
+	threads of the process
+
+###Perfmon to monitor CPU utilization on instance:
+- SQL Server:SQL Statistics/Auto-Param Attempts/sec
+- SQL Server:SQL Statistics/Failed Auto-params/sec
+- SQL Server:SQL Statistics/Batch Requests/sec
+- SQL Server:SQL Statistics/SQL Compilations/sec
+- SQL Server:SQL Statistics/SQL Re-Compilations/sec
+- SQL Server:Plan Cache/Cache hit Ration
+
+
+###Perfmon just to verify high number of recompilations
+- SQLServer: SQL Statistics: SQL Compilations/Sec
+- SQLServer: SQL Statistics: Auto-Param Attempts/Sec
+- SQLServer: SQL Statistics: Failed Auto-Param/Sec
+
+
+
+
+###Perfmon to monitor IO utilization on server
+To investigating disk I/O issues, use Perfmon and spefifically the:
+- Physical Disk\Disk Reads/sec
+- Physical Disk\Disk Writes/sec
+
+The key for performance is having the lowest latency possible:
+- less than 10ms		= good performance
+- between 10ms and 20ms		= slow performance
+- between 20ms and 50ms		= poor performance
+- greather than 50ms		= significant performance problem.
+
+In addition to the performance counters, high wait times for:
+- PAGEIOLATCH_*
+- ASYNC_IO_COMPLETION,
+- IO_COMPLETION
+- WRITELOG
+
+can signs of disk I/O bottlenecks on the server.
+
+
+
+
+
+###Perfmon to monitor MEMORY utilization on server:
+- SQL Server\ Buffer Manager\ Buffer Cache Hit Ratio
+	The fact that this counter shows a 95% hit rate for buffer cache indicates nothing more than
+	the fact that SQL Server is working as designed to read pages into memory before they are
+	needed. (value greater than 95% for OLTP systems and greather than 90% for OLAP systems)
+- SQL Server\ Buffer Manager\ Page life expectancy:
+	The value of this counter reflets the Page Life Expectancy (PLE) at that exact point in time,
+	and it is not uncommon to see periodic drops in the value returned by this performance counter,
+	especially when a large query is executing a table scan, reading new pages into the buffer
+	pool from disk. This counter must be monitored over long periods of time in order to properly
+	identify normal trends. (value greater than 300 - five minutes - over a decade ago)
+- SQL Server\ Buffer Manager\ Free List Stalls/sec: 
+	Occur whenever a request has to wait for a free page in the buffer pool. If the number of
+	stalls exceeds zero frequently or consistently over a period of time, this is a sign of
+	memory pressure.
+- SQL Server\ Buffer Manager\ Lazy Writes/sec:
+	This counter reflects the number of buffer pages that have been flushed by the Lazy Writer
+	process, outside of a normal checkpoint operation, allowing the buffer to be reused for other 
+	pages. If you observe Lazy Writes occurring in conjunction with a low PLE, a low number of free
+	pages, and the occurrence of Free List Stalls, this is a sign that the workload is exceeding 
+	the amount of memory that is available to the buffer pool, and additional memory needs to be 
+	added to the server.
+
+- SQL Server\ Memory Manager\ Total Server Memory (KB)
+- SQL Server\ Memory Manager\ Target Server Memory (KB):
+	Respectively, these counters represent the total amount of memory that has been allocated by
+	SQL Server and the amount of memory that SQL Server wants to commit. When the Target Server
+	Memory counter exceeds the Total Server Memory counter, the SQL Server process wants to commit
+	more memory than is available on the server, which can be a sign of memory pressure.
+- SQL Server\ Memory Manager\ Memory Grants Outstanding:
+	This counter measures the total number of processes that have successfully acquired a
+	workspace memory grant. Low values for this counter, under periods of high user activity
+	or heavy workload, may be a sign of memory pressure, especially if there are a high number of
+	memory grants pending.
+- SQL Server\ Memory Manager\ Memory Grants Pending:
+	This counter measures the total number of processes that are waiting for a workspace memory 
+	grant. If this is non-zero, it is a sign that tunning or optimization of the worklad should be 
+	performed if possible, or that additional memory needs to be added to the server.
+	
+
+
+

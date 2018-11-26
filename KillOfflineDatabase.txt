@@ -1,0 +1,35 @@
+SET NOCOUNT ON
+use SGI_TRN
+
+DECLARE @IdUser	 INT,
+	@cmdKill VARCHAR(200)
+
+DECLARE cur_KillUser CURSOR FOR
+select spid from master..sysprocesses where dbid=db_id() and spid <> @@spid
+
+OPEN cur_KillUser
+FETCH NEXT FROM Cur_KillUser
+INTO @IdUser
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	SELECT @cmdKill = 'KILL ' + STR(@IdUser)
+	EXECUTE (@cmdKill)
+	FETCH NEXT FROM cur_KillUser
+	INTO @IdUser
+END
+CLOSE cur_KillUser
+DEALLOCATE cur_KillUser
+GO
+USE MASTER
+GO
+alter database SGI_TRN set offline;
+GO
+
+
+
+SGI_TRN_Data	1	G:\SGI_TRN\Dados\SGI_TRN_data.mdf	PRIMARY	81472832 KB	131072000 KB	131072 KB	data only
+SGI_TRN_log	2	G:\SGI_TRN\Dados\SGI_TRN_log.ldf	NULL	8782848 KB	131072000 KB	131072 KB	log only
+SGI_TRN_log02	3	O:\Data\SGI_TRN\log\SGI_TRN_log02.ldf	NULL	26643200 KB	131072000 KB	131072 KB	log only
+SGI_TRN_log03	4	O:\Data\SGI_TRN\log\SGI_TRN_log03.ldf	NULL	16154880 KB	131072000 KB	131072 KB	log only
+SGI_TRN_log04	5	O:\Data\SGI_TRN\log\SGI_TRN_log04.ldf	NULL	16973824 KB	131072000 KB	131072 KB	log only
+

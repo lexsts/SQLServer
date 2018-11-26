@@ -1,0 +1,14 @@
+ SELECT 
+'UPDATE TBL set ' +
+'  SENHA=' + ISNULL ('''' +  SENHA + ''''                                                     , 'NULL') + 
+', DT_ULTIMO_ACESSO=' + ISNULL ('''' +  CONVERT(VARCHAR, DT_ULTIMO_ACESSO, 21 ) + ''''      , 'NULL') +
+', DT_ATUALIZACAO_SENHA=' + ISNULL ('''' +  CONVERT(VARCHAR, DT_ATUALIZACAO_SENHA, 21 ) + '''', 'NULL') +
+', DT_DESBLOQUEIO=' + ISNULL ('''' +  CONVERT(VARCHAR, DT_DESBLOQUEIO, 21) + ''''             , 'NULL') +
+', DT_BLOQUEIO=' + ISNULL ('''' +  CONVERT(VARCHAR, DT_BLOQUEIO, 21) + ''''                   , 'NULL') +
+', CD_BLOQUEIO=' + ISNULL (      CONVERT(VARCHAR, CD_BLOQUEIO)                                , 'NULL') +
+', SG_STATUS='   + ISNULL ('''' +  SG_STATUS                      + ''''                      , 'NULL') +
+', IC_SN_NECESSITA_CONFIRMACAO=' + ISNULL ('''' +  IC_SN_NECESSITA_CONFIRMACAO + ''''         , 'NULL') + 
+', NO_TENTATIVAS=' + ISNULL (      CONVERT(VARCHAR, NO_TENTATIVAS)                            , 'NULL') +
+', IC_SN_ADM_SEGURANCA=' + ISNULL ('''' +  IC_SN_ADM_SEGURANCA + ''''                         , 'NULL') +
+' WHERE COD_USUARIO = ''' + LTRIM(RTRIM(COD_USUARIO)) + ''';'
+FROM SSY_USUARIOS;

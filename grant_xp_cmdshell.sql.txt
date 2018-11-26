@@ -1,0 +1,10 @@
+create login cmdshell with password = 'test1'
+go
+use master
+go
+create user cmdshell for login cmdshell
+go
+grant execute on xp_cmdshell to cmdshell
+
+EXEC sp_xp_cmdshell_proxy_account 'domain\Account','Password'
+GO

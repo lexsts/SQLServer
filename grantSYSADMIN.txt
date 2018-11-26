@@ -1,0 +1,2 @@
+grant control server to dbamon;
+GRANT VIEW SERVER STATE TO dbamon;

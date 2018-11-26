@@ -1,0 +1,83 @@
+--Cria a tabela
+CREATE TABLE dbo.tbl_TriggerTest
+(
+    pk_TriggerTest INT  IDENTITY
+  , Comment  NVARCHAR(256)
+  , TriggerSample NVARCHAR(256)
+  , Created  DATETIME DEFAULT GETDATE()
+  , Updated  DATETIME DEFAULT GETDATE()
+)
+
+--1 trigger - versao 1
+CREATE TRIGGER dbo.tr_TriggerTest_Footprint
+ON dbo.tbl_TriggerTest
+AFTER UPDATE 
+AS
+  UPDATE dbo.tbl_TriggerTest
+  SET  Updated = GETDATE()
+  FROM  dbo.tbl_TriggerTest t 
+  INNER JOIN inserted i ON t.pk_TriggerTest = i.pk_TriggerTest
+
+
+--Insercao sem disparo
+INSERT dbo.tbl_TriggerTest (Comment) 
+VALUES ('I')
+
+--Update com disparo
+UPDATE dbo.tbl_TriggerTest 
+SET Comment= 'This is a comment I'
+WHERE PK_TRIGGERTEST=9
+
+--Consulta
+select * from tbl_TriggerTest
+
+--2 trigger - versao 1 (problema: a cada disparo da primeira trigger a segunda e' chamada e assim por diante ate atingir 32)
+CREATE TRIGGER dbo.tr_TriggerTest_Sample
+ON dbo.tbl_TriggerTest
+AFTER UPDATE 
+AS
+  UPDATE dbo.tbl_TriggerTest
+  SET  TriggerSample = 'updated ' + CAST(GETDATE() AS NVARCHAR(20)) 
+  FROM  dbo.tbl_TriggerTest t 
+  INNER JOIN inserted i ON t.pk_TriggerTest = i.pk_TriggerTest
+
+
+
+--1 trigger - versao 2 (a condicao faz com que a segunda trigger nao consiga executar recursivamente permitindo que a primeira conclua
+--o commit e, somente depois disso, a segunda trigger consegue adquirir o direito de executar a sua transacao)
+ALTER TRIGGER dbo.tr_TriggerTest_Footprint
+ON dbo.tbl_TriggerTest
+AFTER UPDATE 
+AS
+BEGIN
+  PRINT CONVERT(CHAR(2),TRIGGER_NESTLEVEL()) + ' tr_TriggerTest_Footprint'
+  IF TRIGGER_NESTLEVEL() > 1
+     RETURN
+     
+  UPDATE dbo.tbl_TriggerTest
+  SET  Updated = GETDATE()
+  FROM  dbo.tbl_TriggerTest t 
+  INNER JOIN inserted i ON t.pk_TriggerTest = i.pk_TriggerTest
+END
+GO
+
+
+--2 trigger - versao 2 (a condicao faz com que a primeira trigger nao consiga executar recursivamente a segunda chamada permitindo que a segunda
+--conclua o commit e, somente depois disso, a segunda trigger consegue adquirir o direito de executar a sua transacao)
+ALTER TRIGGER dbo.tr_TriggerTest_Sample
+ON dbo.tbl_TriggerTest
+AFTER UPDATE 
+AS
+BEGIN
+	PRINT CONVERT(CHAR(2),TRIGGER_NESTLEVEL()) + ' tr_TriggerTest_Sample'
+  IF TRIGGER_NESTLEVEL() > 1
+     RETURN
+     
+  UPDATE dbo.tbl_TriggerTest
+  SET  TriggerSample = 'updated ' + CAST(GETDATE() AS NVARCHAR(20)) 
+  FROM  dbo.tbl_TriggerTest t 
+  INNER JOIN inserted i ON t.pk_TriggerTest = i.pk_TriggerTest  
+END
+GO
+
+

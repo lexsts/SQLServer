@@ -1,0 +1,9 @@
+--Localize a sessão causadora do lock
+select * from sys.dm_exec_requests
+
+--Visualize o comando executado
+dbcc inputbuffer(76)
+go
+
+--Encerre a sessão
+kill 76;

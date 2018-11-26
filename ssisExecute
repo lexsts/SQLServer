@@ -1,0 +1,16 @@
+--Execute a package on filesystem
+dtexec /f "c:\users\administrator.srvwin\documents\visual studio 2010\projects\Integration2-10\Integration2-10\Package.dtsx"
+--with detailed log
+dtexec /f "c:\users\administrator.srvwin\documents\visual studio 2010\projects\Integration2-10\Integration2-10\Package.dtsx" /ConsoleLog
+
+--Execute a package on SQLServer using Windows Authentication
+dtexec /sq "packageName" /ser productionServer
+
+--Validate a package without your execution
+dtexec /sq "packageName" /ser productionServer /va
+
+
+
+--Deploy a package into SQLServer instance
+DTUTIL /FILE ExportTables.dtsx /COPY SQL;"PackageName" /DESTSERVER SQL2012SVC\SQL2012,49599
+

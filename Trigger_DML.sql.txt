@@ -1,0 +1,59 @@
+--TABELA DE LOG
+CREATE TABLE dml_log(
+ [usuario] [varchar](20) NULL,
+ [login] [varchar](20) NULL,
+ [host] [varchar](50) NULL,
+ [horario] [varchar](30) NULL,
+ [comando] [varchar](4000) NULL
+) ON [PRIMARY]
+
+
+--TRIGGER PARA INSERT
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TRIGGER trace_delete_VALORFAM806
+ON  [T_TRADE_ECONOMIC]
+FOR DELETE AS
+
+DECLARE @maq VARCHAR(50)
+ SET @maq = (SELECT HOST_NAME() AS HostName)
+ IF @maq <> 'maquina'
+
+ BEGIN
+   SET NOCOUNT ON 
+   DECLARE @cmd_exec VARCHAR(50), 
+   @query NVARCHAR(255)
+   
+   CREATE TABLE #dados_inputbuffer 
+   ( 
+    EventType NVARCHAR(30), 
+    Parameters INT, 
+    EventInfo NVARCHAR(255) 
+   ) 
+   SET @cmd_exec = 'DBCC INPUTBUFFER(' + STR(@@SPID) + ')' 
+   INSERT INTO #dados_inputbuffer 
+   EXEC (@cmd_exec) 
+   
+   SET @query = (SELECT EventInfo FROM #dados_inputbuffer) 
+   INSERT INTO dml_log 
+   SELECT USER AS UserName,  
+    SYSTEM_USER AS LoginName,
+    HOST_NAME() AS HostName,
+    CONVERT(VARCHAR(30),CURRENT_TIMESTAMP,109) AS CurrentTime, 
+    @query
+ END
+ 
+ 
+ 
+ 
+SELECT * FROM dml_log
+ 
+ 
+ 
+ 
+ --DROP TRIGGER trace_update_VALORFAM806
+ --DROP TRIGGER trace_insert_VALORFAM806
+ --DROP TRIGGER trace_delete_VALORFAM806
+ --DROP TABLE dml_log

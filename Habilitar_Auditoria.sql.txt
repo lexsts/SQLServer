@@ -1,0 +1,14 @@
+SELECT LOGIN_TIME,LOGIN_NAME,ORIGINAL_LOGIN_NAME,HOST_NAME FROM sys.dm_exec_sessions ORDER BY LOGIN_TIME DESC
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Habilita auditoria
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+sp_configure 'show advanced options', 1;
+GO
+RECONFIGURE;
+GO
+sp_configure 'common criteria compliance enabled', 1;
+GO
+RECONFIGURE
+GO
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

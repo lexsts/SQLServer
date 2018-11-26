@@ -1,0 +1,302 @@
+--INSERÇÃO
+BEGIN
+   declare @SQL nvarchar(4000)	
+   declare @contador int
+   set @contador = 169014   
+	while 1 > 0
+    begin		
+		set @SQL = N'insert into REGISTROS (data,ordem,nome,endereco,bairro,cidade,empresa,funcao,nacionalidade,sexo,naturalidade) values(''' + convert(nvarchar, getdate()) + N''',' +
+		convert(nvarchar(10), @contador) + N',' +
+		N'''2ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''3ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''4ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''5ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''6ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''7ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''8ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''9ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''',' +
+		N'''10ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS ALEX JOSE DOS SANTOS' + N''')'
+		print @SQL
+        exec sp_executesql @SQL		
+	set @contador = @contador + 1
+	WAITFOR DELAY '00:00:00.001'        
+    end
+END
+
+
+sp_help REGISTROS
+
+sp_helpfile
+
+CREATE TABLE REGISTROS
+(data datetime not null,
+ordem INT not null,
+nome varchar(255),
+endereco varchar(255),
+bairro varchar(255),
+cidade varchar(255),
+empresa varchar(255),
+funcao varchar(255),
+nacionalidade varchar(255),
+sexo varchar(255),
+naturalidade varchar(255))
+
+
+
+ALTER TABLE REGISTROS DROP CONSTRAINT PK_REGISTROS
+
+ALTER TABLE REGISTROS
+ALTER COLUMN ORDEM VARCHAR(255) NOT NULL
+
+ALTER TABLE REGISTROS ADD CONSTRAINT PK_REGISTROS PRIMARY KEY CLUSTERED 
+(
+ORDEM ASC
+) 
+WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)  ON [INDEX]
+GO
+
+DROP TABLE REGISTROS
+select getdate()
+
+SELECT * FROM REGISTROS
+
+
+
+
+
+
+
+
+
+--TRACE
+USE [AdventureWorks2012]
+USE [AdventureWorks2012]
+EXECUTE dbo.uspGetEmployeeManagers 100
+GO
+SELECT * FROM Production.Product;
+GO
+SELECT * FROM Production.Product WHERE [ReorderPoint] > 500 OR [ReorderPoint] < 1000;
+GO
+SELECT * FROM Production.ProductInventory;
+GO
+SELECT * FROM Sales.SalesOrderDetail;
+GO 
+SELECT * FROM Production.TransactionHistory;
+GO
+DECLARE @QUERY NVARCHAR(MAX)
+DECLARE @PARAM NVARCHAR(MAX)
+SET @QUERY=N'SELECT * FROM Production.Product WHERE [ReorderPoint] < @vReorderPoint'
+SET @PARAM=N'@vReorderPoint INT'
+EXEC SP_EXECUTESQL @QUERY, @PARAM, @vReorderPoint=500
+GO
+DECLARE @INSERT NVARCHAR(MAX)
+DECLARE @SETPARAM NVARCHAR(MAX)
+SET @INSERT=N'SET IDENTITY_INSERT Production.Product ON
+INSERT INTO Production.Product (ProductID,Name,ProductNumber,MakeFlag,FinishedGoodsFlag,Color,SafetyStockLevel,ReorderPoint,StandardCost,ListPrice,Size,SizeUnitMeasureCode,WeightUnitMeasureCode,Weight,DaysToManufacture,ProductLine,Class,Style,ProductSubcategoryID,ProductModelID,SellStartDate,SellEndDate,DiscontinuedDate,rowguid,ModifiedDate)
+VALUES(1000,''LL Crankarm'',''CA-5965'',0,0,''Black'',@vValor,375,0.00,0.00,NULL,NULL,NULL,NULL,0,NULL,''L'',NULL,NULL,NULL,''2002-06-01 00:00:00.000'',NULL,NULL,''3C9D10B7-A6B2-4774-9963-C19DCEE72FEA'',''2008-03-11 10:01:36.827'')'
+SET @SETPARAM=N'@vValor INT'
+EXEC SP_EXECUTESQL @INSERT, @SETPARAM, @vValor=500
+go
+
+--SIMULA ERRO DE NOME DE CURSOS JA DECLARADO
+DECLARE @NOME NVARCHAR(50)
+DECLARE BASES_CURSOR CURSOR FOR 
+SELECT NAME FROM SYS.DATABASES WHERE NAME NOT IN ('MASTER','MSDB','TEMPDB','MODEL')
+OPEN BASES_CURSOR
+FETCH NEXT FROM BASES_CURSOR INTO @NOME
+WHILE @@FETCH_STATUS=0
+BEGIN
+SELECT 'ALTER DATABASE ' + @NOME + ' SET COMPATIBILITY_lEVEL=110'
+FETCH NEXT FROM BASES_CURSOR INTO @NOME
+END
+--CLOSE BASES_CURSOR
+--DEALLOCATE BASES_CURSOR
+DECLARE @NOME2 NVARCHAR(50)
+DECLARE BASES_CURSOR CURSOR FOR 
+SELECT NAME FROM SYS.DATABASES WHERE NAME NOT IN ('MASTER','MSDB','TEMPDB','MODEL')
+OPEN BASES_CURSOR
+FETCH NEXT FROM BASES_CURSOR INTO @NOME2
+WHILE @@FETCH_STATUS=0
+BEGIN
+SELECT 'ALTER INDEX ON ' + @NOME2 + ' REBUILD'
+FETCH NEXT FROM BASES_CURSOR INTO @NOME
+END
+CLOSE BASES_CURSOR
+DEALLOCATE BASES_CURSOR
+go
+
+--SIMULA ERRO DE OVERFLOW CONVERTION
+EXECUTE dbo.INTuspGetEmployeeManagers 100,2147483647 --sem erro
+EXECUTE dbo.INTuspGetEmployeeManagers 100,2147483648 --com erro
+
+CREATE PROCEDURE [dbo].[INTuspGetEmployeeManagers]
+    @BusinessEntityID [int],
+	@INTBusinessEntityID [bigint]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+	DECLARE @INTTable TABLE
+	(
+		recursionlevel int,
+		businessentityid int,
+		firstname varchar(250),
+		lastname varchar(250),
+		organizationnode varchar(250),
+		managerfirstname varchar(250),
+		managerlastname varchar(250),
+		inteiro int
+	);
+
+    -- Use recursive query to list out all Employees required for a particular Manager
+    WITH [EMP_cte]([BusinessEntityID], [OrganizationNode], [FirstName], [LastName], [JobTitle], [RecursionLevel]) -- CTE name and columns
+    AS (
+        SELECT e.[BusinessEntityID], e.[OrganizationNode], p.[FirstName], p.[LastName], e.[JobTitle], 0 -- Get the initial Employee
+        FROM [HumanResources].[Employee] e 
+			INNER JOIN [Person].[Person] as p
+			ON p.[BusinessEntityID] = e.[BusinessEntityID]
+        WHERE e.[BusinessEntityID] = @BusinessEntityID
+        UNION ALL
+        SELECT e.[BusinessEntityID], e.[OrganizationNode], p.[FirstName], p.[LastName], e.[JobTitle], [RecursionLevel] + 1 -- Join recursive member to anchor
+        FROM [HumanResources].[Employee] e 
+            INNER JOIN [EMP_cte]
+            ON e.[OrganizationNode] = [EMP_cte].[OrganizationNode].GetAncestor(1)
+            INNER JOIN [Person].[Person] p 
+            ON p.[BusinessEntityID] = e.[BusinessEntityID]
+    )
+    -- Join back to Employee to return the manager name 
+	INSERT INTO @INTTable
+	(recursionlevel,Businessentityid,firstname,lastname,organizationnode,managerfirstname,managerlastname,inteiro)	
+    SELECT [EMP_cte].[RecursionLevel], [EMP_cte].[BusinessEntityID], [EMP_cte].[FirstName], [EMP_cte].[LastName], 
+        [EMP_cte].[OrganizationNode].ToString() AS [OrganizationNode], p.[FirstName]  AS 'ManagerFirstName', p.[LastName] AS 'ManagerLastName',@INTBusinessEntityID AS INTEIRO -- Outer select from the CTE	
+    FROM [EMP_cte] 
+        INNER JOIN [HumanResources].[Employee] e 
+        ON [EMP_cte].[OrganizationNode].GetAncestor(1) = e.[OrganizationNode]
+        INNER JOIN [Person].[Person] p 
+        ON p.[BusinessEntityID] = e.[BusinessEntityID]
+    ORDER BY [RecursionLevel], [EMP_cte].[OrganizationNode].ToString()
+    OPTION (MAXRECURSION 25);
+	select * from @INTTable;
+END;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT COUNT(*) FROM REGISTROS
+SELECT top 1 * FROM REGISTROS order by ordem desc
+SELECT DISTINCT DATA FROM REGISTROS ORDER BY 1
+
+sp_spaceused REGISTROS
+sp_help REGISTROS
+
+--Retrieving Index Fragmentation Details.
+SELECT
+	O.name AS ObjectName
+	,I.name AS IndexName
+	,IPS.avg_page_space_used_in_percent AS AverageSpaceUsedInPages
+	,IPS.avg_fragmentation_in_percent AS AverageFragmentation
+	,IPS.fragment_count AS FragmentCount
+	,suggestedIndexOperation = CASE 
+		WHEN IPS.avg_fragmentation_in_percent<=30 THEN 'REORGANIZE Index'
+		ELSE 'REBUILD Index' END
+	,suggestedIndexCommand = CASE 
+		WHEN IPS.avg_fragmentation_in_percent<=30 THEN 'ALTER INDEX ' + I.name + ' ON ' + DB_NAME() + '..' + O.name + ' REORGANIZE;'
+		ELSE 'ALTER INDEX ' + I.name + ' ON ' + DB_NAME() + '..' + O.name + ' REBUILD;' END
+FROM sys.dm_db_index_physical_stats(DB_ID(),NULL,NULL,NULL,'DETAILED') AS IPS
+INNER JOIN sys.indexes AS I WITH (nolock)
+ON IPS.object_id = I.object_id AND IPS.index_id = I.index_id
+INNER JOIN sys.objects AS O WITH (nolock)
+ON IPS.object_id = O.object_id 
+WHERE IPS.avg_fragmentation_in_percent > 5
+--AND I.name='_dta_index_ProductDemo_c_5_999674609__K1'
+--AND O.name='REGISTROS'
+ORDER BY AverageFragmentation DESC
+GO
+
+
+
+
+--Partition on field int
+CREATE PARTITION FUNCTION part_registros_ordem (INT) AS
+RANGE LEFT FOR VALUES (100000, 200000, 300000, 400000, 500000,600000,700000,800000,900000)
+GO
+--drop partition function particao_registros_ordem
+
+--Partition schema
+CREATE PARTITION SCHEME partsch_registros_ordem AS
+ PARTITION part_registros_ordem
+TO ([PRIMARY], [INDEX],[FG1], [FG2],[PRIMARY], [INDEX],[FG1], [FG2],[PRIMARY],[INDEX])
+GO
+--drop partition scheme particao_schema_registros_ordem
+
+--Alter table to use a partition
+CREATE UNIQUE CLUSTERED INDEX [PK_REGISTROS] ON registros(ordem) WITH(DROP_EXISTING = ON)ON partsch_registros_ordem(ordem)
+ALTER TABLE REGISTROS DROP CONSTRAINT PK_REGISTROS
+ALTER TABLE REGISTROS ADD CONSTRAINT PK_REGISTROS PRIMARY KEY CLUSTERED 
+(
+ORDEM ASC
+) 
+WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)  ON [INDEX]
+GO
+
+
+SELECT $partition.partsch_registros_ordem(ordem) as nr_particao,*
+FROM dbo.registros
+
+
+
+--Query partition information
+--Partitions
+SELECT * FROM sys.partition_functions
+SELECT * FROM sys.partition_schemes
+drop partition scheme partsch_registros_ordem
+drop partition function part_registros_ordem
+
+SELECT * FROM sys.partition_range_values
+WHERE FUNCTION_ID=65544
+
+SELECT * FROM sys.partition_range_values
+WHERE FUNCTION_ID=65544
+
+SELECT * FROM sys.partitions AS p
+JOIN sys.tables AS t
+    ON  p.object_id = t.object_id
+WHERE p.partition_id IS NOT NULL
+    AND t.name = 'registros';
+
+
+
+
+
+
+
+
+	select sys.partition_functions.name , sys.partition_range_values.* , sys.partition_schemes.name as name_scheme
+from sys.partition_functions
+inner join sys.partition_range_values on sys.partition_range_values.function_id = sys.partition_functions.function_id
+inner join sys.partition_schemes      on sys.partition_schemes.function_id      = sys.partition_functions.function_id
+where sys.partition_functions.name = 'part_registros_ordem'
+
+select sys.partition_schemes.name as name_scheme, sys.data_spaces.name as name_filegroup
+from sys.partition_schemes
+inner join sys.destination_data_spaces on sys.destination_data_spaces.partition_scheme_id = sys.partition_schemes.data_space_id
+inner join sys.data_spaces on sys.data_spaces.data_space_id = sys.destination_data_spaces.data_space_id
+where sys.partition_schemes.name = 'partsch_registros_ordem'

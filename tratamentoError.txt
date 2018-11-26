@@ -1,0 +1,67 @@
+--BEGIN TRY/CATCH
+DECLARE @INSERT NVARCHAR(MAX)
+DECLARE @SETPARAM NVARCHAR(MAX)
+SET @INSERT=N'SET IDENTITY_INSERT Production.Product ON
+INSERT INTO Production.Product (ProductID,Name,ProductNumber,MakeFlag,FinishedGoodsFlag,Color,SafetyStockLevel,ReorderPoint,StandardCost,ListPrice,Size,SizeUnitMeasureCode,WeightUnitMeasureCode,Weight,DaysToManufacture,ProductLine,Class,Style,ProductSubcategoryID,ProductModelID,SellStartDate,SellEndDate,DiscontinuedDate,rowguid,ModifiedDate)
+VALUES(1000,''LL Crankarm'',''CA-5965'',0,0,''Black'',@vValor,375,0.00,0.00,NULL,NULL,NULL,NULL,0,NULL,''L'',NULL,NULL,NULL,''2002-06-01 00:00:00.000'',NULL,NULL,''3C9D10B7-A6B2-4774-9963-C19DCEE72FEA'',''2008-03-11 10:01:36.827'')'
+SET @SETPARAM=N'@vValor INT'
+BEGIN TRY									--Inicio do Bloco de execucao
+EXEC SP_EXECUTESQL @INSERT, @SETPARAM, @vValor=500
+END TRY										--Fim do Bloco de execucao
+BEGIN CATCH									--Inicio do tratamento de erro
+    SELECT									--
+        ERROR_NUMBER() AS ErrorNumber		--
+        ,ERROR_SEVERITY() AS ErrorSeverity	--
+        ,ERROR_STATE() AS ErrorState		--
+        ,ERROR_PROCEDURE() AS ErrorProcedure--
+        ,ERROR_LINE() AS ErrorLine			--
+        ,ERROR_MESSAGE() AS ErrorMessage;	--
+END CATCH;									--Fim do tratamento de erro
+go
+
+
+--BEGIN TRY/CATCH and RAISERROR
+DECLARE @INSERT NVARCHAR(MAX)
+DECLARE @SETPARAM NVARCHAR(MAX)
+SET @INSERT=N'SET IDENTITY_INSERT Production.Product ON
+INSERT INTO Production.Product (ProductID,Name,ProductNumber,MakeFlag,FinishedGoodsFlag,Color,SafetyStockLevel,ReorderPoint,StandardCost,ListPrice,Size,SizeUnitMeasureCode,WeightUnitMeasureCode,Weight,DaysToManufacture,ProductLine,Class,Style,ProductSubcategoryID,ProductModelID,SellStartDate,SellEndDate,DiscontinuedDate,rowguid,ModifiedDate)
+VALUES(1000,''LL Crankarm'',''CA-5965'',0,0,''Black'',@vValor,375,0.00,0.00,NULL,NULL,NULL,NULL,0,NULL,''L'',NULL,NULL,NULL,''2002-06-01 00:00:00.000'',NULL,NULL,''3C9D10B7-A6B2-4774-9963-C19DCEE72FEA'',''2008-03-11 10:01:36.827'')'
+SET @SETPARAM=N'@vValor INT'
+BEGIN TRY									--Inicio do Bloco de execucao
+EXEC SP_EXECUTESQL @INSERT, @SETPARAM, @vValor=500
+END TRY										--Fim do Bloco de execucao
+BEGIN CATCH									--Inicio do tratamento de erro
+	DECLARE @ERROR_MSG NVARCHAR(MAX), @SEVERITY INT, @STATE INT
+      SELECT @SEVERITY = ERROR_SEVERITY(), @STATE = ERROR_STATE()
+            , @ERROR_MSG = ERROR_MESSAGE() + ' err src line: ' + CAST( ERROR_LINE() AS NVARCHAR(20)) + ' ' + ISNULL(ERROR_PROCEDURE(), '');       
+      -- RE-THROW EXCEPTION FOR DIAGNOSTIC VISIBILITY
+      RAISERROR (@ERROR_MSG ,@SEVERITY, @STATE); 
+END CATCH;									--Fim do tratamento de erro
+go
+
+
+--USING @@ERROR
+create procedure tratamentoDeErro
+AS
+DECLARE @INSERT NVARCHAR(MAX)
+DECLARE @SETPARAM NVARCHAR(MAX)
+SET @INSERT=N'SET IDENTITY_INSERT Production.Product ON
+INSERT INTO Production.Product (ProductID,Name,ProductNumber,MakeFlag,FinishedGoodsFlag,Color,SafetyStockLevel,ReorderPoint,StandardCost,ListPrice,Size,SizeUnitMeasureCode,WeightUnitMeasureCode,Weight,DaysToManufacture,ProductLine,Class,Style,ProductSubcategoryID,ProductModelID,SellStartDate,SellEndDate,DiscontinuedDate,rowguid,ModifiedDate)
+VALUES(1000,''LL Crankarm'',''CA-5965'',0,0,''Black'',@vValor,375,0.00,0.00,NULL,NULL,NULL,NULL,0,NULL,''L'',NULL,NULL,NULL,''2002-06-01 00:00:00.000'',NULL,NULL,''3C9D10B7-A6B2-4774-9963-C19DCEE72FEA'',''2008-03-11 10:01:36.827'')'
+SET @SETPARAM=N'@vValor INT'
+EXEC SP_EXECUTESQL @INSERT, @SETPARAM, @vValor=500
+IF @@ERROR <> 0								--Verifica se houve erro no ultimo comando (retorna 2000)
+    BEGIN
+        -- Return 2000 to the calling program to indicate failure.
+        PRINT N'An error occurred deleting the candidate information.';
+		RETURN 2000;
+    END
+ELSE										--Se nao houve, retorna 3000
+    BEGIN					
+        -- Return 3000 to the calling program to indicate success.
+        PRINT N'The job candidate has been deleted.';  
+		RETURN 3000;    
+    END;
+go
+
+

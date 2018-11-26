@@ -1,0 +1,330 @@
+###1.OPTION: Check the consistency and try fix the errors
+DBCC CHECKDB (DB_NAME) WITH ALL_  
+
+--DBCC recovery commands
+ALTER DATABASE [DB_NAME] SET EMERGENCY; --if the database is unavailable for connections
+ALTER DATABASE [DB_NAME] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+
+--1.Option
+DBCC CHECKDB (N'DB_NAME', REPAIR_FAST) WITH ALL_ERRORMSGS, NO_INFOMSGS;
+
+--2.Option
+DBCC CHECKDB (N'DB_NAME', REPAIR_REBUILD) WITH ALL_ERRORMSGS, NO_INFOMSGS;
+
+--3.Option - Not recommended (in this point is better doing a restore from a full backup)
+DBCC CHECKDB (N'DB_NAME', REPAIR_ALLOW_DATA_LOSS) WITH ALL_ERRORMSGS, NO_INFOMSGS;
+
+ALTER DATABASE DB_NAME SET MULTI_USER;
+
+
+--Check page objects
+DBCC TRACEON (3604);
+--1.Option
+DBCC PAGE (DB_NAME, 1,94299, 2); --( {dbid|dbname}, pagenum [,print option] [,cache] [,logical] )
+--2.Option
+DBCC PAGE(DB_NAME,1,143,3) WITH TABLERESULTS
+DBCC TRACEOFF (3604);
+
+
+###2.OPTION: Restore just the pages corrupted from one fullbackup
+RESTORE DATABASE DB_NAME PAGE = '1:94299' FROM DISK = 'C:\YourDatabase.bak' WITH NORECOVERY
+
+
+###3.OPTION: Export/Import
+1.Restore from a full backup
+2.Drop tables in the target(SELECT 'DROP TABLE ' + S.NAME + '.' + O.NAME + ';' from sys.objects O JOIN SYS.SCHEMAS S ON O.SCHEMA_ID=S.SCHEMA_ID where type='U')
+  May be necessary execute the DROP a couple of times to drop tables referenced by Foreign Keys.
+3.Execute a export/import from source directly to target database (just select tables - deselect views)
+4.PRIMARY KEYS
+DECLARE cPK CURSOR FOR
+SELECT DISTINCT C.CONSTRAINT_SCHEMA, C.TABLE_NAME, C.CONSTRAINT_NAME , F.NAME
+FROM SYS.INDEXES I
+INNER JOIN SYS.FILEGROUPS F
+ON I.DATA_SPACE_ID = F.DATA_SPACE_ID
+INNER JOIN SYS.ALL_OBJECTS O
+ON I.[OBJECT_ID] = O.[OBJECT_ID]
+INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS C
+ON O.NAME = C.TABLE_NAME
+WHERE C.CONSTRAINT_TYPE = 'PRIMARY KEY'
+ORDER BY C.TABLE_NAME
+DECLARE @PkSchema SYSNAME
+DECLARE @PkTable SYSNAME
+DECLARE @PkName SYSNAME
+DECLARE @FileName SYSNAME
+-- Loop through all the primary keys
+OPEN cPK
+FETCH NEXT FROM cPK INTO @PkSchema, @PkTable, @PkName , @FileName
+WHILE (@@FETCH_STATUS = 0)
+BEGIN
+DECLARE @PKSQL NVARCHAR(4000) SET @PKSQL = ''
+SET @PKSQL = 'ALTER TABLE ' + @PkSchema + '.' + @PkTable + ' ADD CONSTRAINT ' + @PkName +
+' PRIMARY KEY CLUSTERED ('
+-- Get all columns for the current primary key
+DECLARE cPKColumn CURSOR FOR
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = @PkTable AND CONSTRAINT_NAME = @PkName
+ORDER BY ORDINAL_POSITION
+OPEN cPKColumn
+DECLARE @PkColumn SYSNAME
+DECLARE @PkFirstColumn BIT SET @PkFirstColumn = 1
+-- Loop through all columns and append the sql statement
+FETCH NEXT FROM cPKColumn INTO @PkColumn
+WHILE (@@FETCH_STATUS = 0)
+BEGIN
+IF (@PkFirstColumn = 1)
+SET @PkFirstColumn = 0
+ELSE
+SET @PKSQL = @PKSQL + ', '
+SET @PKSQL = @PKSQL + @PkColumn
+FETCH NEXT FROM cPKColumn INTO @PkColumn
+END
+CLOSE cPKColumn
+DEALLOCATE cPKColumn
+SET @PKSQL = @PKSQL + ')' + ' ON ['+@FileName+'];'
+-- Print the primary key statement
+PRINT @PKSQL
+FETCH NEXT FROM cPK INTO @PkSchema, @PkTable, @PkName, @FileName
+END
+CLOSE cPK
+DEALLOCATE cPK
+
+
+5.CLUSTERED/NONCLUSTERED INDEXES
+SELECT ' CREATE ' +
+    CASE WHEN I.is_unique = 1 THEN ' UNIQUE ' ELSE '' END  + 
+    I.type_desc COLLATE DATABASE_DEFAULT +' INDEX ' +  
+    I.name  + ' ON '  + 
+    Schema_name(T.Schema_id)+'.'+T.name + ' ( ' +
+    KeyColumns + ' )  ' +
+    ISNULL(' INCLUDE ('+IncludedColumns+' ) ','') +
+    ISNULL(' WHERE  '+I.Filter_definition,'') + ' WITH ( ' +
+    CASE WHEN I.is_padded = 1 THEN ' PAD_INDEX = ON ' ELSE ' PAD_INDEX = OFF ' END + ','  +
+    'FILLFACTOR = '+CONVERT(CHAR(5),CASE WHEN I.Fill_factor = 0 THEN 100 ELSE I.Fill_factor END) + ','  +
+	-- default value
+    'SORT_IN_TEMPDB = OFF '  + ','  +
+    CASE WHEN I.ignore_dup_key = 1 THEN ' IGNORE_DUP_KEY = ON ' ELSE ' IGNORE_DUP_KEY = OFF ' END + ','  +
+    CASE WHEN ST.no_recompute = 0 THEN ' STATISTICS_NORECOMPUTE = OFF ' ELSE ' STATISTICS_NORECOMPUTE = ON ' END + ','  +
+	-- default value 
+    ' DROP_EXISTING = OFF '  + ','  +
+	-- default value 
+    ' ONLINE = OFF '  + ','  +
+   CASE WHEN I.allow_row_locks = 1 THEN ' ALLOW_ROW_LOCKS = ON ' ELSE ' ALLOW_ROW_LOCKS = OFF ' END + ','  +
+   CASE WHEN I.allow_page_locks = 1 THEN ' ALLOW_PAGE_LOCKS = ON ' ELSE ' ALLOW_PAGE_LOCKS = OFF ' END  + ' ) ON [' +
+   DS.name + '];'  [CreateIndexScript]
+FROM sys.indexes I  
+ JOIN sys.tables T ON T.Object_id = I.Object_id   
+ JOIN sys.sysindexes SI ON I.Object_id = SI.id AND I.index_id = SI.indid  
+ JOIN (SELECT * FROM ( 
+    SELECT IC2.object_id , IC2.index_id , 
+        STUFF((SELECT ' , ' + C.name + CASE WHEN MAX(CONVERT(INT,IC1.is_descending_key)) = 1 THEN ' DESC ' ELSE ' ASC ' END
+    FROM sys.index_columns IC1 
+    JOIN Sys.columns C  
+       ON C.object_id = IC1.object_id  
+       AND C.column_id = IC1.column_id  
+       AND IC1.is_included_column = 0 
+    WHERE IC1.object_id = IC2.object_id  
+       AND IC1.index_id = IC2.index_id  
+    GROUP BY IC1.object_id,C.name,index_id 
+    ORDER BY MAX(IC1.key_ordinal) 
+       FOR XML PATH('')), 1, 2, '') KeyColumns  
+    FROM sys.index_columns IC2  
+    --WHERE IC2.Object_id = object_id('Person.Address') --Comment for all tables 
+    GROUP BY IC2.object_id ,IC2.index_id) tmp3 )tmp4  
+  ON I.object_id = tmp4.object_id AND I.Index_id = tmp4.index_id 
+ JOIN sys.stats ST ON ST.object_id = I.object_id AND ST.stats_id = I.index_id  
+ JOIN sys.data_spaces DS ON I.data_space_id=DS.data_space_id  
+ JOIN sys.filegroups FG ON I.data_space_id=FG.data_space_id  
+ LEFT JOIN (SELECT * FROM (  
+    SELECT IC2.object_id , IC2.index_id ,  
+        STUFF((SELECT ' , ' + C.name 
+    FROM sys.index_columns IC1  
+    JOIN Sys.columns C   
+       ON C.object_id = IC1.object_id   
+       AND C.column_id = IC1.column_id   
+       AND IC1.is_included_column = 1  
+    WHERE IC1.object_id = IC2.object_id   
+       AND IC1.index_id = IC2.index_id   
+    GROUP BY IC1.object_id,C.name,index_id  
+       FOR XML PATH('')), 1, 2, '') IncludedColumns   
+   FROM sys.index_columns IC2   
+   --WHERE IC2.Object_id = object_id('Person.Address') --Comment for all tables  
+   GROUP BY IC2.object_id ,IC2.index_id) tmp1  
+   WHERE IncludedColumns IS NOT NULL ) tmp2   
+ON tmp2.object_id = I.object_id AND tmp2.index_id = I.index_id  
+WHERE I.is_primary_key = 0 AND I.is_unique_constraint = 0
+--AND I.Object_id = object_id('Person.Address') --Comment for all tables
+--AND I.name = 'IX_Address_PostalCode' --comment for all indexes
+
+6.FOREIGN KEYS
+SELECT 'ALTER TABLE '+S.NAME+'.'+OBJECT_NAME(F.PARENT_OBJECT_ID)+ ' ADD CONSTRAINT '
++ F.NAME + ' FOREIGN KEY'+'('+COL_NAME(FC.PARENT_OBJECT_ID,FC.PARENT_COLUMN_ID)+
+')'+'REFERENCES '+(SELECT S.NAME FROM SYS.SCHEMAS S JOIN SYS.OBJECTS O ON S.SCHEMA_ID=O.SCHEMA_ID WHERE O.OBJECT_ID=F.REFERENCED_OBJECT_ID)+'.'+OBJECT_NAME (F.REFERENCED_OBJECT_ID)+'('
++COL_NAME(FC.REFERENCED_OBJECT_ID,FC.REFERENCED_COLUMN_ID)+');'
+FROM SYS.FOREIGN_KEYS AS F
+INNER JOIN SYS.FOREIGN_KEY_COLUMNS AS FC
+ON F.OBJECT_ID = FC.CONSTRAINT_OBJECT_ID
+INNER JOIN SYS.OBJECTS O
+ON F.PARENT_OBJECT_ID=O.OBJECT_ID
+INNER JOIN SYS.SCHEMAS S
+ON O.SCHEMA_ID=S.SCHEMA_ID
+
+7.DEFAULT CONSTRAINTS
+SELECT
+    'ALTER TABLE ' + s.name + '.' + OBJECT_NAME(dc.parent_object_id) + 
+    ' ADD CONSTRAINT ' + dc.name + ' DEFAULT(' + definition 
+    + ') FOR ' + c.name +';'
+FROM sys.default_constraints dc
+INNER JOIN sys.columns c 
+ON dc.parent_object_id = c.object_id 
+INNER JOIN sys.objects o
+ON c.object_id=o.object_id
+INNER JOIN sys.schemas s
+ON o.schema_id=s.schema_id
+AND dc.parent_column_id = c.column_id
+
+8.UNIQUE CONSTRAINTS
+select 'ALTER TABLE ' + TC.TABLE_SCHEMA + '.' + TC.TABLE_NAME + ' ADD CONSTRAINT ' + TC.CONSTRAINT_NAME + ' UNIQUE (' + CC.Column_Name + ');'
+from information_schema.table_constraints TC
+inner join information_schema.constraint_column_usage CC 
+on TC.Constraint_Name = CC.Constraint_Name
+where TC.constraint_type = 'Unique'
+order by TC.Constraint_Name
+
+9.CHECK CONSTRAINTS
+DECLARE @constraints CURSOR;
+ DECLARE
+         @table_full_name		nvarchar(max)
+ ,       @constraint_name		nvarchar(max)
+ ,       @constraint_full_name	nvarchar(max)
+ ,       @constraint_definition	nvarchar(max)
+ ;
+
+ SET @constraints = CURSOR FOR
+ SELECT
+         QUOTENAME(cc.CONSTRAINT_SCHEMA) + '.' + QUOTENAME(cc.CONSTRAINT_NAME) 
+		AS constraint_full_name
+ ,       QUOTENAME(cc.CONSTRAINT_NAME)                                         
+		AS constraint_name
+ ,       QUOTENAME(ctu.TABLE_SCHEMA) + '.' + QUOTENAME(ctu.TABLE_NAME)         
+		AS table_full_name
+ ,       cc.CHECK_CLAUSE                                                       
+		AS constraint_definition
+ FROM
+ 		INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
+ 		INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE ctu
+ 			ON ctu.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+ ORDER BY
+         cc.CONSTRAINT_SCHEMA
+ ,       cc.CONSTRAINT_NAME
+
+ OPEN @constraints
+ FETCH NEXT FROM @constraints INTO
+ 		@constraint_full_name,
+		@constraint_name,
+		@table_full_name,
+		@constraint_definition;
+
+ WHILE @@FETCH_STATUS = 0 BEGIN
+         PRINT   ' '
+         PRINT   'IF EXISTS (SELECT * FROM sys.check_constraints '
+         PRINT   '                       WHERE object_id       = OBJECT_ID(N' + 
+                                         CHAR(39) + @constraint_full_name + CHAR(39) + ')'
+         PRINT   '                       AND parent_object_id  = OBJECT_ID(N' + 
+                                         CHAR(39) + @table_full_name + CHAR(39) + ')) '
+         PRINT   '       ALTER TABLE ' + @table_full_name + ' DROP CONSTRAINT ' + @constraint_name
+         PRINT   'GO'
+         PRINT   ' '
+         PRINT   'ALTER TABLE '		+ @table_full_name + ' WITH NOCHECK '
+         PRINT   '       ADD CONSTRAINT '	+ @constraint_name
+         PRINT   '       CHECK '		+ @constraint_definition
+         PRINT   'GO'
+         PRINT   ' '
+         PRINT   'ALTER TABLE ' + @table_full_name + ' CHECK CONSTRAINT ' + @constraint_name
+         PRINT   'GO'
+         PRINT   ' '
+         FETCH NEXT FROM @constraints INTO
+         			@constraint_full_name,
+				@constraint_name,
+				@table_full_name,
+				@constraint_definition;
+ END
+ CLOSE           	@constraints;
+ DEALLOCATE      	@constraints;
+
+10. SQL_SCALAR_FUNCTION
+On source database go to: Tasks > Generate Scripts > User-Defined-Functions
+On target database, execute the script generated to recreate the functions
+
+11.SQL_TRIGGER
+SELECT 
+    [definition] + ' GO' AS Codigo
+	,sysobjects.name AS trigger_name 
+    ,USER_NAME(sysobjects.uid) AS trigger_owner 
+    ,s.name AS table_schema 
+    ,OBJECT_NAME(parent_obj) AS table_name 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsUpdateTrigger') AS isupdate 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsDeleteTrigger') AS isdelete 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsInsertTrigger') AS isinsert 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsAfterTrigger') AS isafter 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsInsteadOfTrigger') AS isinsteadof 
+    ,OBJECTPROPERTY( sysobjects.id, 'ExecIsTriggerDisabled') AS [disabled] 
+FROM sysobjects 
+/*
+INNER JOIN sysusers 
+    ON sysobjects.uid = sysusers.uid 
+*/  
+INNER JOIN sys.tables t 
+    ON sysobjects.parent_obj = t.object_id 
+INNER JOIN sys.sql_modules sm
+ON sysobjects.id=sm.object_id
+INNER JOIN sys.schemas s 
+    ON t.schema_id = s.schema_id 
+WHERE sysobjects.type = 'TR'
+
+12. Compare the number of objects
+SELECT TYPE_DESC,COUNT(1) FROM SYS.OBJECTS GROUP BY TYPE_DESC
+
+
+OBS.: if necessary, insert rows on target tables from source tables:
+USE OrigemDB
+SELECT 'SET IDENTITY_INSERT TargetDB.' + S.NAME + '.' + O.NAME + ' ON; 
+INSERT INTO TargetDB.' + S.NAME + '.' + O.NAME + ' (' +
+(SELECT SUBSTRING((SELECT ', ' + QUOTENAME(COLUMN_NAME)
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = O.NAME
+        ORDER BY ORDINAL_POSITION
+        FOR XML path('')), 3, 200000)) +
+') SELECT * FROM ' + + S.NAME + '.' + O.NAME + '; SET IDENTITY_INSERT TargetDB.' + S.NAME + '.' + O.NAME + ' OFF; ' 
+from sys.objects O JOIN SYS.SCHEMAS S ON O.SCHEMA_ID=S.SCHEMA_ID where type='U'
+
+
+###Command parameters
+DBCC CHECKDB 
+[
+    [ ( database_name | database_id | 0
+        [ , NOINDEX 
+        | , { REPAIR_ALLOW_DATA_LOSS | REPAIR_FAST | REPAIR_REBUILD } ]
+    ) ]
+    [ WITH 
+        {
+            [ ALL_ERRORMSGS ]
+            [ , EXTENDED_LOGICAL_CHECKS ] 
+            [ , NO_INFOMSGS ]
+            [ , TABLOCK ]
+            [ , ESTIMATEONLY ]
+            [ , { PHYSICAL_ONLY | DATA_PURITY } ]
+        }
+    ]
+]
+
+REPAIR_FAST:
+Performs minor, nontime-consuming repair actions such as repairing extra keys in nonclustered indexes. These repairs can be done quickly and without risk of data loss.
+
+REPAIR_REBUILD:
+Performs all repairs done by REPAIR_FAST and includes time-consuming repairs such as rebuilding indexes. These repairs can be done without risk of data loss.
+
+REPAIR_ALLOW_DATA_LOSS:
+Performs all repairs done by REPAIR_REBUILD and includes allocation and deallocation of rows and pages for correcting allocation errors, structural row or page errors, and deletion of corrupted text objects. These repairs can result in some data loss. The repair may be done under a user transaction to allow the user to roll back the changes made. If repairs are rolled back, the database will still contain errors and should be restored from a backup. If a repair for an error has been skipped due to the provided repair level, any repairs that depend on the repair are also skipped. After repairs are completed, back up the database.
+
+

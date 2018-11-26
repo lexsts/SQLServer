@@ -1,0 +1,7 @@
+USE dbsbs
+GO
+exec sp_helpfile
+DBCC SHRINKFILE(sbs_log02, 1)
+BACKUP LOG dbsbs TO DISK='NUL:'
+DBCC SHRINKFILE(sbs_log02, 1)
+GO 

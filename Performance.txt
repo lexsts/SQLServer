@@ -1,0 +1,60 @@
+SELECT	er.session_id,
+		er.status, -- Background, Running, Runnable, Sleeping, Pending and Suspended.
+		er.start_time,
+		er.total_elapsed_time, -- Total time elapsed in milliseconds since the request arrived. (tempo decorrido)
+		er.cpu_time, -- CPU time in milliseconds that is used by the request.
+		er.estimated_completion_time, -- Internal only.
+		er.percent_complete, -- Percent of work completed for certain operations, rollbacks included (This does not provide progress data for queries)
+		er.command, 
+		DB_NAME(database_id) AS 'DatabaseName', 
+		user_id,
+		er.wait_resource, -- If the request is blocked, this column returns the resource for which the request is waiting.
+		er.wait_time, -- If the request is blocked, this column returns the duration in milliseconds, of the current wait.
+		er.blocking_session_id, -- ID of the session that is blocking the request. 0 = is not blocked, or information for blocking session is not available or cannot be identified.   
+		er.lock_timeout, -- Lock time-out period in milliseconds for this request.
+		er.open_resultset_count,
+		er.row_count,
+		er.reads,
+		er.writes,
+		er.logical_reads,
+		st.text
+  FROM sys.dm_exec_requests AS er
+       CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS st
+  WHERE DB_NAME(database_id)='DBSBS';
+
+
+
+
+set nocount on;
+DECLARE @tmp_log table
+(spid varchar(200),
+statuslogin varchar(200),
+login_name varchar(200),
+hostname varchar(200),
+blkby varchar(200),
+dbname varchar(200),
+command varchar(200),
+cputime varchar(200),
+diskIO varchar(200),
+lastbatch varchar(200),
+programname  varchar(250),
+SPIDS  varchar(200),
+REQUESTID  varchar(200)
+);
+insert into @tmp_log
+exec sp_who2;
+SELECT * FROM @tmp_log WHERE DBNAME='DBSBS' ORDER BY CPUTIME DESC;
+
+
+
+
+
+
+
+select (TOTAL_ELAPSED_TIME/1000/60) min,* from master.[dbo].[tb_logaudit_executions]
+where databasename not in ('master','msdb','tempdb')
+AND COMMAND <> 'BACKUP DATABASE'
+ORDER BY (TOTAL_ELAPSED_TIME/1000/60) DESC
+
+
+

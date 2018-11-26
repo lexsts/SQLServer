@@ -1,0 +1,25 @@
+SELECT Top (select count(1) FROM SYS.DATABASES WHERE NAME NOT IN ('MASTER','MSDB','TEMPDB','MODEL'))
+destination_database_name as 'Database Name',
+[user_name] as 'Username',
+--CASE restore_type
+--WHEN NULL THEN 'NULL'
+--WHEN 'D' THEN 'Database'
+--WHEN 'F' THEN 'File'
+--WHEN 'G' THEN 'Filegroup'
+--WHEN 'I' THEN 'Differential'
+--WHEN 'L' THEN 'Log File'
+--WHEN 'V' THEN 'Verifyonly'
+--WHEN 'R' THEN 'Revert'
+--END as 'Restore Type',
+backup_set_id,
+Case [replace]
+WHEN NULL THEN 'NULL'
+WHEN 1 THEN 'YES'
+WHEN 0 THEN 'NO'
+END as 'Database Replaced',
+restore_date as 'Restore Date'
+FROM msdb..restorehistory
+--where destination_database_name = 'YourDBName'
+WHERE restore_type = 'L'
+and restore_date >= '2013-03-22 00:00:00.000'
+order by restore_date desc

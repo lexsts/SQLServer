@@ -1,0 +1,12 @@
+1-) Check datafile physical locations:
+
+select * from master..sysaltfiles where filename like '%EasyIRPJ%' 
+
+2-) Run similar alter database command to rename physical datafile names.
+
+Alter database EasyIRPJ MODIFY FILE (NAME=easyirpj_Data,FILENAME='F:\Sqldata\EasyIRPJ\data\EasyIRPJ.mdf');
+
+Following similar message will come up means change will apply when server is restarted
+
+The file "MYDB_Data01" has been modified in the system catalog. The new path will be used the next time the database is started.
+

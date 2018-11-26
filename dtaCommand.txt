@@ -1,0 +1,9 @@
+--Windows authentication
+dta -D AdventureWorks2012 -s "Adventureworks2012 - CommandLine" -S SQL2012SVC\SQL2012 -E -if C:\temp\SQL2012_Performance\Trace\teste.sql -F -of C:\temp\SQL2012_Performance\Trace\DTA.sql
+
+
+--SQL authentication
+dta -D AdventureWorks2012 -s "Adventureworks2012 - CommandLine" -S SQL2012SVC\SQL2012 -U sa -P password -if C:\temp\SQL2012_Performance\Trace\teste.sql -F -of C:\temp\SQL2012_Performance\Trace\DTA.sql
+
+
+

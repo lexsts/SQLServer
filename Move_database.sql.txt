@@ -1,0 +1,50 @@
+--MOVIMENTAR mssqlsystemresource
+NET START MSSQLSERVER /f /T3608
+
+ALTER DATABASE mssqlsystemresource 
+    MODIFY FILE (NAME=data, FILENAME= 'new_path_of_master\mssqlsystemresource.mdf');
+GO
+ALTER DATABASE mssqlsystemresource 
+    MODIFY FILE (NAME=log, FILENAME= 'new_path_of_master\mssqlsystemresource.ldf');
+GO
+
+
+ALTER DATABASE mssqlsystemresource SET READ_ONLY;
+
+
+
+--MOVIMENTAR MODEL
+NET START MSSQLSERVER /f /T3608
+
+ALTER DATABASE model
+    MODIFY FILE (NAME=data, FILENAME= 'new_path_of_master\model.mdf');
+GO
+ALTER DATABASE model 
+    MODIFY FILE (NAME=log, FILENAME= 'new_path_of_master\model.ldf');
+GO
+
+
+ALTER DATABASE mssqlsystemresource SET READ_ONLY;
+
+
+
+--MOVIMENTAR TEMPDB / MSDB
+USE master;
+GO
+ALTER DATABASE tempdb 
+MODIFY FILE (NAME = tempdev, FILENAME = 'E:\SQLData\tempdb.mdf');
+GO
+ALTER DATABASE tempdb 
+MODIFY FILE (NAME = templog, FILENAME = 'F:\SQLLog\templog.ldf');
+GO
+
+
+
+--MOVIMENTAR MASTER
+-dC:\Program Files\Microsoft SQL Server\MSSQL.1\MSSQL\DATA\master.mdf;-eC:\Program Files\Microsoft SQL Server\MSSQL.1\MSSQL\LOG\ERRORLOG;-lC:\Program Files\Microsoft SQL Server\MSSQL.1\MSSQL\DATA\mastlog.ldf
+
+
+
+--DEFINIR NOVO DIRETÓRIO DE LOG PARA JOBS E AGENT
+Registry = [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL.<instance number>\SQLServerAgent\ErrorLogfile
+Registry = [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL.<instance number>\SQLServerAgent\WorkingDirectory

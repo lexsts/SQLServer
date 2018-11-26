@@ -1,0 +1,1 @@
+%ProgramFiles(x86)%\Microsoft SQL Server\110\Tools\Performance Dashboard
